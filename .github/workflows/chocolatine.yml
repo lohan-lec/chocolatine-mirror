@@ -1,0 +1,45 @@
+name : Chocolatine
+
+env:
+  MIRROR_URL: ${{ secrets.MIRROR_URL }}
+  EXECUTABLES: ${{ secrets.EXECUTABLES }}
+
+
+on:
+  push:
+    branches-ignore: [ga-ignore-*]
+  pull_request:
+    branches-ignore: [ga-ignore-*]
+
+jobs:
+  check_mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if mirror
+        run: |
+          if [ "${{ github.event.repository.clone_url }}" = "${{ env.MIRROR_URL }}" ]; then
+            echo "This is a mirror repository, skipping workflow"
+            exit 1
+          fi
+
+  check_coding_style:
+    needs: check_mirror
+    runs-on: ubuntu-latest
+    container: ghcr.io/epitech/coding-style-checker:latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run coding style
+        run: |
+          check.sh $(pwd) $(pwd)
+          if [ -s "coding-style-reports.log" ]; then
+            cat coding-style-reports.log
+            while IFS= read -r line; do
+              file=$(echo "$line" | cut -d: -f1)
+              line_num=$(echo "$line" | cut -d: -f2)
+              error=$(echo "$line" | cut -d: -f3-)
+              echo "::error file=$file,line=$line_num::$error"
+            done < coding-style-reports.log
+            exit 1
+          fi
