@@ -36,10 +36,10 @@ jobs:
           if [ -s "coding-style-reports.log" ]; then
             cat coding-style-reports.log
             while IFS= read -r line; do
-              file=$(echo "$line" | cut -d: -f1)
-              line_num=$(echo "$line" | cut -d: -f2)
-              error=$(echo "$line" | cut -d: -f3-)
-              echo "::error file=$file,line=$line_num::$error"
+              raw_file=$(echo "$line" | cut -d: -f1)
+              file=${raw_file#./}
+              line_num=$(echo "$line" | cut -d: -f2 | tr -d ' ')
+              echo "::error file=$file,line=$line_num::$line"
             done < coding-style-reports.log
             exit 1
           fi
