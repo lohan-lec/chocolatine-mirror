@@ -61,8 +61,10 @@ jobs:
           make clean
         
       - name: Check executables
+        shell: bash
         run: |
-          for exec in ${EXECUTABLES//,/ }; do
+          IFS=',' read -ra exec_array <<< "$EXECUTABLES"
+          for exec in "${exec_array[@]}"; do
             if [ ! -x "$exec" ]; then
               echo "Error: '$exec' not found or not executable"
               exit 1
