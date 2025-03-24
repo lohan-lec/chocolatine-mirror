@@ -46,13 +46,11 @@ jobs:
   check_program_compilation:
     needs: check_mirror
     runs-on: ubuntu-latest
+    container: epitechcontent/epitest-docker
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
-      - name: Install build tools
-        run: sudo apt-get update && sudo apt-get install -y build-essential make gcc
-        
+
       - name: make
         run: |
           make
@@ -64,6 +62,7 @@ jobs:
         
       - name: Check executables
         run: |
+          IFS=','
           for exec in ${{ env.EXECUTABLES }}; do
             if [ ! -x "$exec" ]; then
               echo "Error: '$exec' not found or not executable"
@@ -71,3 +70,32 @@ jobs:
             fi
             echo "Executable '$exec' found and is executable"
           done
+
+  run_tests:
+    needs: check_mirror
+    runs-on: ubuntu-latest
+    container: epitechcontent/epitest-docker
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: make_tests_run
+        run: |
+          make tests_run
+        timeout-minutes: 2
+
+  push_to_mirror:
+    needs: check_mirror
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Push to mirror
+        uses: pixta-dev/repository-mirroring-action@v1
+        with:
+          target_repo_url: ${{ env.MIRROR_URL }}
+          ssh_private_key: ${{ secrets.GIT_SSH_PRIVATE_KEY }}
