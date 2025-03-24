@@ -37,4 +37,7 @@ clean:
 fclean: clean
 	$(RM) $(NAME) $(NAME2) $(TESTS_NAME)
 
+tests_run:
+	printf "Running tests... fake for test\n"
+
 re: fclean all
