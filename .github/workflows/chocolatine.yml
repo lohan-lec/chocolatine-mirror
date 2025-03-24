@@ -62,8 +62,8 @@ jobs:
         
       - name: Check executables
         run: |
-          IFS=','
-          for exec in ${{ env.EXECUTABLES }}; do
+          IFS=',' read -ra exec_array <<< "${{ env.EXECUTABLES }}"
+          for exec in "${exec_array[@]}"; do
             if [ ! -x "$exec" ]; then
               echo "Error: '$exec' not found or not executable"
               exit 1
