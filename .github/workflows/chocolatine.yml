@@ -42,3 +42,30 @@ jobs:
             done < coding-style-reports.log
             exit 1
           fi
+  
+  check_program_compilation:
+    needs: check_mirror
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: make
+        run: |
+          make
+        timeout-minutes: 2
+        
+      - name: make_clean
+        run: |
+          make clean
+        timeout-minutes: 2
+        
+      - name: Check executables
+        run: |
+          for exec in ${{ env.EXECUTABLES }}; do
+            if [ ! -x "$exec" ]; then
+              echo "Error: '$exec' not found or not executable"
+              exit 1
+            fi
+            echo "Executable '$exec' found and is executable"
+          done
