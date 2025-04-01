@@ -6,23 +6,29 @@
 ##
 
 NAME	=	mysh
+NAME2	=	mysh2
 
 SRC	=	main.c
+SRC2	=	main2.c
 
 OBJ	=	$(SRC:.c=.o)
+OBJ2	=	$(SRC2:.c=.o)
 
 CFLAGS	=	-Wall -Wextra
 
-all: $(NAME)
+all: $(NAME) $(NAME2)
 
 $(NAME): $(OBJ)
 	gcc -o $(NAME) $(OBJ) $(CFLAGS)
 
+$(NAME2): $(OBJ2)
+	gcc -o $(NAME2) $(OBJ2) $(CFLAGS)
+
 clean:
-	rm -f $(OBJ)
+	rm -f $(OBJ) $(OBJ2)
 
 fclean: clean
-	rm -f $(NAME)
+	rm -f $(NAME) $(NAME2)
 
 re: fclean all
 
