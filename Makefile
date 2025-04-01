@@ -5,7 +5,7 @@
 ## Makefile
 ##
 
-NAME	=	program
+NAME	=	mysh
 
 SRC	=	main.c
 
