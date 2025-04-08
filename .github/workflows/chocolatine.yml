@@ -3,6 +3,7 @@ name : Chocolatine
 env:
   MIRROR_URL: ${{ secrets.MIRROR_URL }}
   EXECUTABLES: ${{ secrets.EXECUTABLES }}
+  BANNED_FUNCTIONS: ${{ secrets.BANNED_FUNCTIONS }}
 
 
 on:
@@ -43,8 +44,24 @@ jobs:
             exit 1
           fi
   
-  check_program_compilation:
+  check_banned_functions:
     needs: check_coding_style
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for banned functions
+        run: |
+          for func in $(echo "$BANNED_FUNCTIONS" | tr ',' ' '); do
+            if grep -r "$func(" --include="*.c" --include="*.h" .; then
+              echo "Error: Banned function '$func' found in code"
+              exit 1
+            fi
+          done
+  
+  check_program_compilation:
+    needs: check_banned_functions
     runs-on: ubuntu-latest
     container: epitechcontent/epitest-docker
     steps:
