@@ -22,7 +22,7 @@ jobs:
           echo "Mirror URL: ${{ env.MIRROR_URL }}"
           if [ "${{ github.event.repository.html_url }}" = "${{ env.MIRROR_URL }}" ]; then
             echo "This is a mirror repository, skipping workflow"
-            exit 1
+            exit 78
           fi
 
   check_coding_style:
