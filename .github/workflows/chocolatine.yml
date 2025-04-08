@@ -18,13 +18,16 @@ jobs:
     steps:
       - name: Check if mirror
         run: |
-          if [ "${{ github.event.repository.clone_url }}" = "${{ env.MIRROR_URL }}" ]; then
+          echo "Current repo URL: ${{ github.event.repository.clone_url }}"
+          echo "Mirror URL: ${{ env.MIRROR_URL }}"
+          if [ "${{ github.event.repository.html_url }}" = "${{ env.MIRROR_URL }}" ]; then
             echo "This is a mirror repository, skipping workflow"
             exit 1
           fi
 
   check_coding_style:
     needs: check_mirror
+    if: needs.check_mirror.result != 'skipped'
     runs-on: ubuntu-latest
     container: ghcr.io/epitech/coding-style-checker:latest
     steps:
