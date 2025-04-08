@@ -1,10 +1,9 @@
-name : Chocolatine
+name: Chocolatine
 
 env:
   MIRROR_URL: ${{ secrets.MIRROR_URL }}
   EXECUTABLES: ${{ secrets.EXECUTABLES }}
   BANNED_FUNCTIONS: ${{ secrets.BANNED_FUNCTIONS }}
-
 
 on:
   push:
@@ -15,19 +14,23 @@ on:
 jobs:
   check_mirror:
     runs-on: ubuntu-latest
+    continue-on-error: true
+    outputs:
+      is_mirror: ${{ steps.check.outputs.is_mirror }}
     steps:
       - name: Check if mirror
+        id: check
         run: |
-          echo "Current repo URL: ${{ github.event.repository.clone_url }}"
-          echo "Mirror URL: ${{ env.MIRROR_URL }}"
-          if [ "${{ github.event.repository.html_url }}" = "${{ env.MIRROR_URL }}" ]; then
+          if [ "${{ github.event.repository.html_url }}" = "${{ secrets.MIRROR_URL }}" ]; then
             echo "This is a mirror repository, skipping workflow"
-            exit 78
+            echo "is_mirror=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_mirror=false" >> $GITHUB_OUTPUT
           fi
 
   check_coding_style:
     needs: check_mirror
-    if: needs.check_mirror.result != 'skipped'
+    if: needs.check_mirror.outputs.is_mirror == 'false'
     runs-on: ubuntu-latest
     container: ghcr.io/epitech/coding-style-checker:latest
     steps:
@@ -46,9 +49,10 @@ jobs:
             done < coding-style-reports.log
             exit 1
           fi
-  
+
   check_banned_functions:
     needs: check_coding_style
+    if: needs.check_mirror.outputs.is_mirror == 'false'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -62,9 +66,10 @@ jobs:
               exit 1
             fi
           done
-  
+
   check_program_compilation:
     needs: check_banned_functions
+    if: needs.check_mirror.outputs.is_mirror == 'false'
     runs-on: ubuntu-latest
     container: epitechcontent/epitest-docker
     steps:
@@ -75,11 +80,11 @@ jobs:
         run: |
           make
         timeout-minutes: 2
-        
+
       - name: make_clean
         run: |
           make clean
-        
+
       - name: Check executables
         shell: bash
         run: |
@@ -94,6 +99,7 @@ jobs:
 
   run_tests:
     needs: check_program_compilation
+    if: needs.check_mirror.outputs.is_mirror == 'false'
     runs-on: ubuntu-latest
     container: epitechcontent/epitest-docker
     steps:
@@ -107,8 +113,8 @@ jobs:
 
   push_to_mirror:
     needs: run_tests
+    if: github.event_name == 'push' && needs.check_mirror.outputs.is_mirror == 'false'
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
